@@ -1,0 +1,81 @@
+******************************************************AlertComponent 
+import { CommonModule } from '@angular/common';
+import { Component, Input, NgModule } from '@angular/core';
+
+@Component({
+  selector: 'app-alert',
+  template: `
+    <div class="alert alert-{{ type }}" role="alert">
+     <ng-content></ng-content>
+    </div>
+  `
+})
+export class AlertComponent {
+  @Input() type = 'primary';
+}
+
+@NgModule({
+  imports: [CommonModule]
+})
+export class AlertModule {}
+***************************************************************usage component
+import { Component, Injector } from '@angular/core';
+import { createCustomElement } from '@angular/elements';
+import { FormControl } from '@angular/forms';
+import { AlertComponent } from './alert/alert.component';
+
+@Component({
+  template: `
+   <textarea [formControl]="control"></textarea>
+
+<div [injectHTML]="control.value"></div>
+  `
+})
+export class AppComponent {
+  control = new FormControl('<app-alert>This is neat</app-alert>');
+
+  constructor(private injector: Injector) {}
+
+  ngOnInit() {
+    const element = createCustomElement(AlertComponent, { injector: this.injector });
+    customElements.define('app-alert', element);
+  }
+}
+*****************************************************************InjectHTMLDirective 
+@Directive({
+  selector: '[injectHTML]',
+})
+export class InjectHTMLDirective {
+  @Input() set injectHTML(content: string) {
+    this.host.nativeElement.innerHTML = content;
+  }
+
+  constructor(private host: ElementRef) {}
+}
+********************************************************** second usage component
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FooDirective } from '../foo.directive';
+
+@Component({
+  selector: 'app-input',
+  template: `
+    <input [formControl]="control" fooDirective />
+    {{ control.value }}
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class InputComponent  {
+  control = new FormControl();
+}
+
+@NgModule({
+  imports: [ReactiveFormsModule],
+  declarations: [InputComponent, FooDirective],
+})
+class InputModule {}
+
+*****************************************************************for lazy loading in router
+import('./alert/alert.component').then(({ AlertComponent } ) => {
+  const element = createCustomElement(m.AlertComponent, { injector });
+  customElements.define('app-alert', element);
+});
